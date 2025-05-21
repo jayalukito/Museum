@@ -205,7 +205,7 @@ function animate() {
     // let preArtworkCollisionPosZ = playerPosition.z;
 
     // Proposed X-axis movement
-    let localDeltaX = -velocity.x * delta; // velocity.x is local, apply delta
+    let localDeltaX = velocity.x * delta; // CORRECTED: Removed negation
     let worldDeltaXVec = new THREE.Vector3(localDeltaX, 0, 0).applyEuler(eulerForMovement);
     let potentialPosX = playerPosition.x + worldDeltaXVec.x;
 
@@ -231,7 +231,7 @@ function animate() {
 
 
     // Proposed Z-axis movement (using the potentially updated playerPosition.x from X-check)
-    let localDeltaZ = -velocity.z * delta; // velocity.z is local, apply delta
+    let localDeltaZ = velocity.z * delta; // CORRECTED: Removed negation
     let worldDeltaZVec = new THREE.Vector3(0, 0, localDeltaZ).applyEuler(eulerForMovement);
     let potentialPosZ = playerPosition.z + worldDeltaZVec.z;
 
