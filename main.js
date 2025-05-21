@@ -1,7 +1,8 @@
 // 1. Import Three.js (access THREE globally)
 
-// Movement and camera control variables
-let moveForward = false;
+document.addEventListener('DOMContentLoaded', () => {
+    // Movement and camera control variables
+    let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
@@ -115,6 +116,21 @@ const pedestal = new THREE.Mesh(pedestalGeometry, pedestalMaterial);
 pedestal.position.set(7, 1, 8); // Adjusted position, y position is half its height
 scene.add(pedestal);
 
+// Player Collision Constants
+const playerCollisionRadius = 0.25;
+const playerCollisionHeight = 1.6; // Total height of player's collision box
+const playerCollisionBoxCenterY = playerCollisionHeight / 2; // Center Y for a box standing on y=0
+
+// Artwork Bounding Boxes Array
+const artworkBoundingBoxes = [];
+const artworksToCollide = [cubeArtwork, sphereArtwork, cylinderArtwork, smallCubeArtwork, pedestal];
+
+artworksToCollide.forEach(artworkMesh => {
+    artworkMesh.updateMatrixWorld(true); // Ensure matrix is current
+    const box = new THREE.Box3().setFromObject(artworkMesh);
+    artworkBoundingBoxes.push(box);
+});
+
 // (Old initial camera position removed, now handled by playerPosition)
 
 // Pointer Lock and Mouse Controls
@@ -171,31 +187,130 @@ function animate() {
     if (moveForward || moveBackward) velocity.z -= direction.z * 40.0 * delta;
     if (moveLeft || moveRight) velocity.x -= direction.x * 40.0 * delta;
 
-    // Apply movement relative to camera direction
-    const moveDirection = new THREE.Vector3(-velocity.x, 0, -velocity.z).applyEuler(euler);
-    playerPosition.x += moveDirection.x * delta;
-    playerPosition.z += moveDirection.z * delta;
+    // --- Start of New Artwork Collision Logic ---
+
+    const eulerForMovement = new THREE.Euler(0, euler.y, 0, 'YXZ'); // Use only camera's yaw for FPS movement
+
+    // Store current position before artwork collision checks (not strictly needed here as we apply valid moves directly)
+    // let preArtworkCollisionPosX = playerPosition.x;
+    // let preArtworkCollisionPosZ = playerPosition.z;
+
+    // Proposed X-axis movement
+    let localDeltaX = -velocity.x * delta; // velocity.x is local, apply delta
+    let worldDeltaXVec = new THREE.Vector3(localDeltaX, 0, 0).applyEuler(eulerForMovement);
+    let potentialPosX = playerPosition.x + worldDeltaXVec.x;
+
+    let tempPlayerBoxX = new THREE.Box3();
+    tempPlayerBoxX.setFromCenterAndSize(
+        new THREE.Vector3(potentialPosX, playerCollisionBoxCenterY, playerPosition.z),
+        new THREE.Vector3(playerCollisionRadius * 2, playerCollisionHeight, playerCollisionRadius * 2)
+    );
+
+    let collisionX = false;
+    for (const artBox of artworkBoundingBoxes) {
+        if (tempPlayerBoxX.intersectsBox(artBox)) {
+            collisionX = true;
+            // velocity.x = 0; // Optional: Stop further pushing if input is held
+            break;
+        }
+    }
+
+    if (!collisionX) {
+        playerPosition.x = potentialPosX;
+    }
+    // else playerPosition.x remains at its current value for this frame's X-movement part
+
+
+    // Proposed Z-axis movement (using the potentially updated playerPosition.x from X-check)
+    let localDeltaZ = -velocity.z * delta; // velocity.z is local, apply delta
+    let worldDeltaZVec = new THREE.Vector3(0, 0, localDeltaZ).applyEuler(eulerForMovement);
+    let potentialPosZ = playerPosition.z + worldDeltaZVec.z;
+
+    let tempPlayerBoxZ = new THREE.Box3();
+    tempPlayerBoxZ.setFromCenterAndSize(
+        new THREE.Vector3(playerPosition.x, playerCollisionBoxCenterY, potentialPosZ), // Use current/updated playerPosition.x
+        new THREE.Vector3(playerCollisionRadius * 2, playerCollisionHeight, playerCollisionRadius * 2)
+    );
+
+    let collisionZ = false;
+    for (const artBox of artworkBoundingBoxes) {
+        if (tempPlayerBoxZ.intersectsBox(artBox)) {
+            collisionZ = true;
+            // velocity.z = 0; // Optional: Stop further pushing
+            break;
+        }
+    }
+
+    if (!collisionZ) {
+        playerPosition.z = potentialPosZ;
+    }
+    // else playerPosition.z remains at its current value for this frame's Z-movement part
+
+    // --- End of New Artwork Collision Logic ---
+    
     // playerPosition.y += velocity.y * delta; // For jumping/gravity
 
     // Basic ground collision
+    // This sets camera height. The collision box for artworks is relative to y=0 ground.
     if (playerPosition.y < 1.6) {
         // velocity.y = 0;
         playerPosition.y = 1.6;
         // canJump = true;
     }
 
-    // Basic wall collision
+    // Basic wall collision (uses playerPosition updated by artwork collision)
     // Room boundaries (adjust based on your wall positions and thickness)
     // Walls are at +/-10 for X and +/-15 for Z, thickness 0.5
-    // Player radius/size estimate (e.g., 0.25)
-    const playerRadius = 0.25; 
-    const roomMinX = -10 + wallThickness / 2 + playerRadius; // Left wall: x = -10
-    const roomMaxX = 10 - wallThickness / 2 - playerRadius;  // Right wall: x = 10
-    const roomMinZ = -15 + wallThickness / 2 + playerRadius; // Front wall: z = -15
-    const roomMaxZ = 15 - wallThickness / 2 - playerRadius;  // Back wall: z = 15
+    // Player radius/size estimate
+    const playerRadius = 0.25; // Make sure this is defined
 
-    playerPosition.x = Math.max(roomMinX, Math.min(roomMaxX, playerPosition.x));
-    playerPosition.z = Math.max(roomMinZ, Math.min(roomMaxZ, playerPosition.z));
+    // Wall boundaries (inner surfaces)
+    // wallThickness is 0.5
+    // Front wall: position z = -15
+    // Back wall: position z = 15
+    // Left wall: position x = -10
+    // Right wall: position x = 10
+    const frontWallZ = -15 + (wallThickness / 2);
+    const backWallZ  =  15 - (wallThickness / 2);
+    const leftWallX  = -10 + (wallThickness / 2);
+    const rightWallX =  10 - (wallThickness / 2);
+
+    // Calculate potential new positions (using playerPosition already updated by artwork collision)
+    // The wall collision logic operates on the already (potentially) modified playerPosition.x and playerPosition.z
+    // from the artwork collision step.
+    // We are now checking if this new position (after artwork handling) collides with walls.
+    
+    // X-axis wall collision (uses playerRadius for wall collision, distinct from playerCollisionRadius for artworks if needed)
+    if (worldDeltaXVec.x > 0) { // Attempting to move right relative to world
+        if (playerPosition.x + playerRadius > rightWallX) { // playerPosition.x is now potentialPosX if no art collision
+            playerPosition.x = rightWallX - playerRadius;
+            // velocity.x = 0; // Velocity already reflects input, stopping here might feel abrupt if sliding
+        }
+    } else if (worldDeltaXVec.x < 0) { // Attempting to move left
+        if (playerPosition.x - playerRadius < leftWallX) {
+            playerPosition.x = leftWallX + playerRadius;
+            // velocity.x = 0;
+        }
+    }
+
+    // Z-axis wall collision
+    if (worldDeltaZVec.z > 0) { // Attempting to move towards +Z world
+        if (playerPosition.z + playerRadius > backWallZ) {
+            playerPosition.z = backWallZ - playerRadius;
+            // velocity.z = 0;
+        }
+    } else if (worldDeltaZVec.z < 0) { // Attempting to move towards -Z world
+        if (playerPosition.z - playerRadius < frontWallZ) {
+            playerPosition.z = frontWallZ + playerRadius;
+            // velocity.z = 0;
+        }
+    }
+    // Note: The velocity.z logic might seem inverted here compared to direction.z.
+    // This is because moveDirection.z is -velocity.z.
+    // So if velocity.z is negative (moveForward), moveDirection.z is positive.
+    // And if velocity.z is positive (moveBackward), moveDirection.z is negative.
+    // The conditions "moveDirection.z > 0" means player is trying to move towards +Z world axis.
+    // The conditions "moveDirection.z < 0" means player is trying to move towards -Z world axis.
 
     // Update camera
     camera.quaternion.setFromEuler(euler);
@@ -212,4 +327,5 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }, false);
 
-animate();
+    animate();
+});
