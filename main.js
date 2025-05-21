@@ -154,7 +154,7 @@ loader.load(
         // --- Positioning and Scaling ---
         // The old sphere was at x=6, y=1.5 (center), z=-8.
         // We want the base of the dino to be on the ground (y=0).
-        dinoModel.position.set(6, 2, -8);
+        dinoModel.position.set(-8, 1, -8);
 
         // --- Initial Scaling (NEEDS ADJUSTMENT BY USER LATER) ---
         // Calculate current bounding box to make an informed guess for scale.
@@ -206,6 +206,57 @@ loader.load(
     },
     function (error) {
         // Called when loading has errors
+        console.error('An error happened while loading the GLTF model:', error);
+        const container = document.getElementById('container') || document.body;
+        container.innerHTML += '<div style="padding: 5px; text-align: center; font-family: sans-serif; font-size: 16px; color: orange;">Warning: Could not load the dinosaur model. See console for details.</div>';
+    }
+);
+loader.load(
+    'dino/scene.gltf', // Path to your GLTF file
+    function (gltf) {
+        // Called when the resource is loaded
+        const dinoModel = gltf.scene;
+
+        // --- Positioning and Scaling ---
+        dinoModel.position.set(6, 1, -8);
+
+        // --- Initial Scaling ---
+        const initialBox = new THREE.Box3().setFromObject(dinoModel);
+        const initialSize = new THREE.Vector3();
+        initialBox.getSize(initialSize);
+
+        const targetHeight = 1.5;
+        let scaleFactor = 1;
+        if (initialSize.y > 0) {
+            scaleFactor = targetHeight / initialSize.y;
+        } else if (initialSize.x > 0) {
+            scaleFactor = targetHeight / initialSize.x;
+        } else if (initialSize.z > 0) {
+            scaleFactor = targetHeight / initialSize.z;
+        }
+
+        if (!isFinite(scaleFactor) || scaleFactor > 1000 || scaleFactor < 0.001) {
+            scaleFactor = 1;
+        }
+
+        dinoModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+        // --- Rotation (180 degrees around Y axis) ---
+        dinoModel.rotation.y = Math.PI;
+
+        scene.add(dinoModel);
+
+        // --- Collision Setup for the Loaded Model ---
+        dinoModel.updateMatrixWorld(true);
+        const dinoBoundingBox = new THREE.Box3().setFromObject(dinoModel);
+        artworkBoundingBoxes.push(dinoBoundingBox);
+
+        console.log('Dinosaur model loaded and added to scene.');
+    },
+    function (xhr) {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    },
+    function (error) {
         console.error('An error happened while loading the GLTF model:', error);
         const container = document.getElementById('container') || document.body;
         container.innerHTML += '<div style="padding: 5px; text-align: center; font-family: sans-serif; font-size: 16px; color: orange;">Warning: Could not load the dinosaur model. See console for details.</div>';
