@@ -97,10 +97,10 @@ const artworkMaterial2 = new THREE.MeshStandardMaterial({ color: 0x00ff00 }); //
 const artworkMaterial3 = new THREE.MeshStandardMaterial({ color: 0x0000ff }); // Blue
 
 // Artwork 1: A Red Cube
-const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
-const cubeArtwork = new THREE.Mesh(cubeGeometry, artworkMaterial1);
-cubeArtwork.position.set(-6, 1, -10); // Adjusted position
-scene.add(cubeArtwork);
+// const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
+// const cubeArtwork = new THREE.Mesh(cubeGeometry, artworkMaterial1);
+// cubeArtwork.position.set(-6, 1, -10); // Adjusted position
+// scene.add(cubeArtwork);
 
 // Artwork 2: A Green Sphere (REMOVED)
 // const sphereGeometry = new THREE.SphereGeometry(1.5, 32, 32);
@@ -109,24 +109,24 @@ scene.add(cubeArtwork);
 // scene.add(sphereArtwork);
 
 // Artwork 3: A Blue Cylinder "Statue"
-const cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 3, 32);
-const cylinderArtwork = new THREE.Mesh(cylinderGeometry, artworkMaterial3);
-cylinderArtwork.position.set(0, 1.5, 12); // Adjusted position, centered towards the back wall
-scene.add(cylinderArtwork);
+// const cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 3, 32);
+// const cylinderArtwork = new THREE.Mesh(cylinderGeometry, artworkMaterial3);
+// cylinderArtwork.position.set(0, 1.5, 12); // Adjusted position, centered towards the back wall
+// scene.add(cylinderArtwork);
 
 // Artwork 4: A smaller, different colored cube on a "pedestal"
-const smallCubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-const smallCubeMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 }); // Yellow
-const smallCubeArtwork = new THREE.Mesh(smallCubeGeometry, smallCubeMaterial);
-smallCubeArtwork.position.set(7, 2.5, 8); // Adjusted position, positioned higher
-scene.add(smallCubeArtwork);
+// const smallCubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+// const smallCubeMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 }); // Yellow
+// const smallCubeArtwork = new THREE.Mesh(smallCubeGeometry, smallCubeMaterial);
+// smallCubeArtwork.position.set(7, 2.5, 8); // Adjusted position, positioned higher
+// scene.add(smallCubeArtwork);
 
 // Pedestal for the small cube
-const pedestalGeometry = new THREE.BoxGeometry(1.2, 2, 1.2); // Slightly wider and taller base
-const pedestalMaterial = new THREE.MeshStandardMaterial({ color: 0x505050 }); // Dark grey
-const pedestal = new THREE.Mesh(pedestalGeometry, pedestalMaterial);
-pedestal.position.set(7, 1, 8); // Adjusted position, y position is half its height
-scene.add(pedestal);
+// const pedestalGeometry = new THREE.BoxGeometry(1.2, 2, 1.2); // Slightly wider and taller base
+// const pedestalMaterial = new THREE.MeshStandardMaterial({ color: 0x505050 }); // Dark grey
+// const pedestal = new THREE.Mesh(pedestalGeometry, pedestalMaterial);
+// pedestal.position.set(7, 1, 8); // Adjusted position, y position is half its height
+// scene.add(pedestal);
 
 // Player Collision Constants
 const playerCollisionRadius = 0.25;
@@ -135,7 +135,7 @@ const playerCollisionBoxCenterY = playerCollisionHeight / 2; // Center Y for a b
 
 // Artwork Bounding Boxes Array
 const artworkBoundingBoxes = [];
-const artworksToCollide = [cubeArtwork, cylinderArtwork, smallCubeArtwork, pedestal]; // Removed sphereArtwork
+const artworksToCollide = []; // Removed sphereArtwork
 
 artworksToCollide.forEach(artworkMesh => {
     artworkMesh.updateMatrixWorld(true); // Ensure matrix is current
