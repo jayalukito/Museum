@@ -1,8 +1,17 @@
 // 1. Import Three.js (access THREE globally)
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Movement and camera control variables
-    let moveForward = false;
+    if (typeof THREE === 'undefined' || typeof THREE !== 'object') {
+        console.error('CRITICAL: THREE.js library not loaded or not an object. Ensure the CDN link in index.html is correct and accessible.');
+        // Display a message to the user on the page itself
+        const container = document.getElementById('container') || document.body;
+        container.innerHTML = '<div style="padding: 20px; text-align: center; font-family: sans-serif; font-size: 18px; color: red;">Error: THREE.js library failed to load. Please check your internet connection and the browser console for more details.</div>';
+        return; // Stop further execution
+    }
+
+    try {
+        // Movement and camera control variables
+        let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
@@ -327,5 +336,11 @@ window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
 }, false);
 
-    animate();
+        animate();
+
+    } catch (error) {
+        console.error("An error occurred during Three.js setup or runtime:", error);
+        const container = document.getElementById('container') || document.body;
+        container.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif; font-size: 18px; color: red;">An error occurred: ${error.message}. Please check the browser console for more details.</div>`;
+    }
 });
