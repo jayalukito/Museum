@@ -154,7 +154,7 @@ loader.load(
         // --- Positioning and Scaling ---
         // The old sphere was at x=6, y=1.5 (center), z=-8.
         // We want the base of the dino to be on the ground (y=0).
-        dinoModel.position.set(6, 1.2, -8);
+        dinoModel.position.set(6, 2, -8);
 
         // --- Initial Scaling (NEEDS ADJUSTMENT BY USER LATER) ---
         // Calculate current bounding box to make an informed guess for scale.
