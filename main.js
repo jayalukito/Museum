@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader } from '/node_modules/three/examples/jsm/loaders/GLTFLoader.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // The check for THREE might still be useful, but is less critical with direct imports.
@@ -146,7 +146,7 @@ artworksToCollide.forEach(artworkMesh => {
 // Load GLTF Dinosaur Model
 const loader = new GLTFLoader();
 loader.load(
-    'models/dino/scene.gltf', // Path to your GLTF file
+    'dino/scene.gltf', // Path to your GLTF file
     function (gltf) {
         // Called when the resource is loaded
         const dinoModel = gltf.scene;
@@ -154,7 +154,7 @@ loader.load(
         // --- Positioning and Scaling ---
         // The old sphere was at x=6, y=1.5 (center), z=-8.
         // We want the base of the dino to be on the ground (y=0).
-        dinoModel.position.set(6, 0, -8);
+        dinoModel.position.set(6, 1.2, -8);
 
         // --- Initial Scaling (NEEDS ADJUSTMENT BY USER LATER) ---
         // Calculate current bounding box to make an informed guess for scale.
