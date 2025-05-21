@@ -8,10 +8,18 @@
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
     </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.176.0/build/three.module.js",
+            "three/examples/jsm/": "https://unpkg.com/three@0.176.0/examples/jsm/"
+        }
+    }
+    </script>
 </head>
 <body>
     <div id="container"></div>
-    <script async src="https://unpkg.com/three@0.176.0/build/three.min.js"></script>
+    <!-- REMOVED: <script async src="https://unpkg.com/three@0.176.0/build/three.min.js"></script> -->
     <script type="module" src="main.js"></script>
 </body>
 </html>

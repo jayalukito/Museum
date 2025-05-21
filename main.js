@@ -1,6 +1,9 @@
-// 1. Import Three.js (access THREE globally)
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // The check for THREE might still be useful, but is less critical with direct imports.
+    // If the import fails, the script likely won't execute this far anyway.
     if (typeof THREE === 'undefined' || typeof THREE !== 'object') {
         console.error('CRITICAL: THREE.js library not loaded or not an object. Ensure the CDN link in index.html is correct and accessible.');
         // Display a message to the user on the page itself
@@ -99,11 +102,11 @@ const cubeArtwork = new THREE.Mesh(cubeGeometry, artworkMaterial1);
 cubeArtwork.position.set(-6, 1, -10); // Adjusted position
 scene.add(cubeArtwork);
 
-// Artwork 2: A Green Sphere
-const sphereGeometry = new THREE.SphereGeometry(1.5, 32, 32);
-const sphereArtwork = new THREE.Mesh(sphereGeometry, artworkMaterial2);
-sphereArtwork.position.set(6, 1.5, -8); // Adjusted position
-scene.add(sphereArtwork);
+// Artwork 2: A Green Sphere (REMOVED)
+// const sphereGeometry = new THREE.SphereGeometry(1.5, 32, 32);
+// const sphereArtwork = new THREE.Mesh(sphereGeometry, artworkMaterial2);
+// sphereArtwork.position.set(6, 1.5, -8); // Adjusted position
+// scene.add(sphereArtwork);
 
 // Artwork 3: A Blue Cylinder "Statue"
 const cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 3, 32);
@@ -132,13 +135,82 @@ const playerCollisionBoxCenterY = playerCollisionHeight / 2; // Center Y for a b
 
 // Artwork Bounding Boxes Array
 const artworkBoundingBoxes = [];
-const artworksToCollide = [cubeArtwork, sphereArtwork, cylinderArtwork, smallCubeArtwork, pedestal];
+const artworksToCollide = [cubeArtwork, cylinderArtwork, smallCubeArtwork, pedestal]; // Removed sphereArtwork
 
 artworksToCollide.forEach(artworkMesh => {
     artworkMesh.updateMatrixWorld(true); // Ensure matrix is current
     const box = new THREE.Box3().setFromObject(artworkMesh);
     artworkBoundingBoxes.push(box);
 });
+
+// Load GLTF Dinosaur Model
+const loader = new GLTFLoader();
+loader.load(
+    'models/dino/scene.gltf', // Path to your GLTF file
+    function (gltf) {
+        // Called when the resource is loaded
+        const dinoModel = gltf.scene;
+
+        // --- Positioning and Scaling ---
+        // The old sphere was at x=6, y=1.5 (center), z=-8.
+        // We want the base of the dino to be on the ground (y=0).
+        dinoModel.position.set(6, 0, -8);
+
+        // --- Initial Scaling (NEEDS ADJUSTMENT BY USER LATER) ---
+        // Calculate current bounding box to make an informed guess for scale.
+        const initialBox = new THREE.Box3().setFromObject(dinoModel);
+        const initialSize = new THREE.Vector3();
+        initialBox.getSize(initialSize);
+
+        // Let's aim for a height of around 1.5 to 2 units for now.
+        const targetHeight = 1.5;
+        let scaleFactor = 1;
+        if (initialSize.y > 0) { // Avoid division by zero or very small numbers
+            scaleFactor = targetHeight / initialSize.y;
+        } else if (initialSize.x > 0) { // Fallback to x or z if y is 0
+             scaleFactor = targetHeight / initialSize.x;
+        } else if (initialSize.z > 0) {
+             scaleFactor = targetHeight / initialSize.z;
+        }
+        
+        // If initialSize is tiny or zero, scaleFactor could become huge or NaN. Cap it.
+        if (!isFinite(scaleFactor) || scaleFactor > 1000 || scaleFactor < 0.001) {
+            scaleFactor = 1; // Default to 1 if calculation is off
+        }
+
+        dinoModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        
+        // Re-center after scaling if model's origin isn't at its base.
+        // For now, we assume origin is at the base for y=0 positioning.
+        // If the model appears half-buried or floating, its internal origin is different.
+        // A common adjustment after scaling, if origin is centered:
+        // const scaledBox = new THREE.Box3().setFromObject(dinoModel);
+        // dinoModel.position.y -= (scaledBox.min.y - dinoModel.position.y); // Aligns bottom of scaled box with current y position
+
+        scene.add(dinoModel);
+
+        // --- Collision Setup for the Loaded Model ---
+        dinoModel.updateMatrixWorld(true); // Ensure transformations are applied
+        const dinoBoundingBox = new THREE.Box3().setFromObject(dinoModel);
+        artworkBoundingBoxes.push(dinoBoundingBox); // Add to existing array
+
+        console.log('Dinosaur model loaded and added to scene.');
+        // If artworkBoundingBoxes was fully populated before, this new box is simply added.
+        // If it's populated *after* this async load, then this model needs to be included there.
+        // The current setup adds static artwork boxes first, then this one. This is fine.
+
+    },
+    function (xhr) {
+        // Called while loading is progressing
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    },
+    function (error) {
+        // Called when loading has errors
+        console.error('An error happened while loading the GLTF model:', error);
+        const container = document.getElementById('container') || document.body;
+        container.innerHTML += '<div style="padding: 5px; text-align: center; font-family: sans-serif; font-size: 16px; color: orange;">Warning: Could not load the dinosaur model. See console for details.</div>';
+    }
+);
 
 // (Old initial camera position removed, now handled by playerPosition)
 
